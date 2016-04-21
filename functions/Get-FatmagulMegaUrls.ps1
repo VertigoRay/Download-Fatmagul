@@ -1,12 +1,17 @@
 function Get-FatmagulMegaUrls () {
     [CmdletBinding()]
     param(
+        [string]
+        $Url = 'http://fatmagulnovelaturca.blogspot.com/'
+        ,
         [switch]
         $UsePreSavedMegaUrls = $UsePreSavedMegaUrls
     )
 
 
     if ($UsePreSavedMegaUrls) {
+        Write-Verbose "Using pre-saved Mega URLs."
+
         # These are pre-saved from the blog...
         $mega_urls = @{
             'fatmagulcap001' = 'https://mega.nz/#!XIp3zJSL!-vondqtE-EP98vgwyHKk5sOuBx2VRdxjzckPvY3Su1I';
@@ -219,15 +224,21 @@ function Get-FatmagulMegaUrls () {
             'fatmagulcap208' = 'https://mega.nz/#!OpUljYBJ!9btT3UXJM9-rB0Z09lIrNZ3Enra-VaANPqtj8Xee8jk'
         }
     } else {
-        [hashtable]$mega_urls = @{}
+        Write-Verbose "Fetching Mega URLs from OP."
 
-        $www = Invoke-WebRequest 'http://fatmagulnovelaturca.blogspot.com/' -UseBasicParsing
-        foreach ($adfly_link in ($www.Links | ?{ $_.innerText -ilike '*adf.ly*fatmagul*' })) {
-            if ((Invoke-WebRequest $adfly_link.href -UseBasicParsing).Content -match '"(https:\/\/mega\.nz\/\#\![^"]+)"') {
+        $www = Invoke-WebRequest $Url -UseBasicParsing
+        $adfly_links = $www.Links | ?{ $_.href -ilike '*adf.ly*fatmagul*' }
+        Write-Verbose "$($www.StatusDescription) ($($www.StatusCode)): Found $($adfly_links.Count) Links."
+
+        [hashtable]$mega_urls = @{}
+        foreach ($adfly_link in $adfly_links) {
+            if ((Invoke-WebRequest $adfly_link.href -UseBasicParsing).Content -match '"(https:\/\/mega[^"]+)"') {
                 $chapter = $adfly_link.href.Split('/')[-1]
                 $mega_url = $Matches[1]
                 Write-Verbose "Found: ${chapter}: ${mega_url}"
                 $mega_urls.Add($chapter, $mega_url)
+            } else {
+                Write-Warning "Mega URL not found!"
             }
         }
     }

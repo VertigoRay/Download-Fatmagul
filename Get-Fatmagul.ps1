@@ -31,15 +31,15 @@ param(
         Position=0,
         HelpMessage="Path to 'megadl.exe'. Download MegaTools from: https://megatools.megous.com"
     )]
-    [System.Management.Automation.PathInfo]
-    $MegaDL = (Resolve-Path "$(Split-Path $PSScriptRoot -Parent)\megatools-1.9.97-win64\megadl.exe")
+    [string]
+    $MegaDL = "$(Split-Path $PSScriptRoot -Parent)\megatools-1.9.97-win64\megadl.exe"
     ,
     [Parameter(
         Position=1,
         HelpMessage="Path to download the files to."
     )]
-    [System.Management.Automation.PathInfo]
-    $DownloadTo = (Resolve-Path "$(Split-Path $PSScriptRoot -Parent)\Media\TV\Fatmagul")
+    [string]
+    $DownloadTo = "$(Split-Path $PSScriptRoot -Parent)\Media\TV\Fatmagul"
     ,
     [switch]
     $UsePreSavedMegaUrls
@@ -53,23 +53,22 @@ foreach ($file in (Get-ChildItem "${PSScriptRoot}\functions" -File -ErrorAction 
     . $file.FullName
 }
 
-$mega_urls = Get-FatmagulMegaUrls
 
 # Rename everything back to original so we don't re-download.
-Get-ChildItem $DownloadTo | ConvertFrom-PlexNamingConvention
+Get-ChildItem $DownloadTo -File | ConvertFrom-PlexNamingConvention
 
 # Download everything, and fix names.
 $jobs = @{}
-
-foreach ($url in $mega_urls) {
+$mega_urls = Get-FatmagulMegaUrls
+foreach ($url in $mega_urls.GetEnumerator()) {
     while ((Get-Job -State 'Running' | Measure-Object).Count -gt 5) {
         Start-Sleep -Seconds 10
     }
 
-    $job = Invoke-MegaDlAsJob -MegaDL $MegaDL -DownloadTo $DownloadTo -Url $Url
+    $job = Invoke-MegaDlAsJob -MegaDL $MegaDL -DownloadTo $DownloadTo -Url $url.Value
 
-    Write-Verbose "Downloading: $($job.Id): ${url}"
-    $jobs.Add($url, $job.Id) | Out-Null
+    Write-Verbose "Downloading: $($url.Name) ($($job.Id)): $($url.Value)"
+    $jobs.Add($url.Value, $job.Id) | Out-Null
     [System.Collections.ArrayList]$jobs_remove = @()
 
     foreach ($j in $jobs.GetEnumerator()) {
@@ -79,7 +78,7 @@ foreach ($url in $mega_urls) {
             } catch {
                 $Error[0].Exception.Message -imatch 'Fatmagul\s(\d+)\.([^\s]+)' | Out-Null
             } finally {
-                ConvertTo-PlexNamingConvention -FileName (Resolve-Path "${DownloadTo}\$($Matches[0])" -ErrorAction)
+                ConvertTo-PlexNamingConvention -FileName (Resolve-Path "${DownloadTo}\$($Matches[0])" -ErrorAction Stop)
             }
 
             # Can't remove Keys from the object we're looping through.

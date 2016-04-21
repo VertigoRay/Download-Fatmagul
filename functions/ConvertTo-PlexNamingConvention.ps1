@@ -2,19 +2,18 @@ function ConvertTo-PlexNamingConvention () {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$True,ValueFromPipeline=$True,ValueFromPipelinebyPropertyName=$True)]
-        [System.Management.Automation.PathInfo]
         $FileName
     )
 
     BEGIN {
-        Write-Verbose "Converting From: Plex Naming Convention"
+        Write-Verbose "Converting To: Plex Naming Convention"
     }
 
     PROCESS {
         foreach ($File in $FileName) {
-            $child = Split-Path $File -Child
-            $ext = $child.Split('.')[-1]
-            $title = $child.Split('.')[0..($child.Split('.').Count-2)] -Join ' '
+            $Leaf = Split-Path $File -Leaf
+            $ext = $Leaf.Split('.')[-1]
+            $title = $Leaf.Split('.')[0..($Leaf.Split('.').Count-2)] -Join ' '
 
             [System.Collections.ArrayList]$title_pieces = @()
             foreach ($t in $title.Split(' .')) {
@@ -25,15 +24,15 @@ function ConvertTo-PlexNamingConvention () {
                 }
 
                 if ($episode) {
-                    $title_pieces.Add(('e{0:d3}' -f $episode))
+                    $title_pieces.Add(('e{0:d3}' -f $episode)) | Out-Null
                 } else {
-                    $title_pieces.Add($title_piece)
+                    $title_pieces.Add($title_piece) | Out-Null
                 }
             }
 
             $rename_to = '{0}.{1}' -f @(($title_pieces -join '.'), $ext)
-            Write-Verbose "$($File.Name) > ${rename_to}"
-            Rename-Item $File.FullName $rename_to -ErrorAction Ignore
+            Write-Verbose "$($Leaf) > ${rename_to}"
+            Rename-Item $File $rename_to -ErrorAction Ignore
         }
     }
 
