@@ -222,7 +222,7 @@ function Get-FatmagulMegaUrls () {
         [hashtable]$mega_urls = @{}
 
         $www = Invoke-WebRequest 'http://fatmagulnovelaturca.blogspot.com/' -UseBasicParsing
-        foreach ($adfly_link in ($www.Links | ?{ $_.innerText -ilike '*adf.ly*fatmagul*' }) {
+        foreach ($adfly_link in ($www.Links | ?{ $_.innerText -ilike '*adf.ly*fatmagul*' })) {
             if ((Invoke-WebRequest $adfly_link.href -UseBasicParsing).Content -match '"(https:\/\/mega\.nz\/\#\![^"]+)"') {
                 $chapter = $adfly_link.href.Split('/')[-1]
                 $mega_url = $Matches[1]
