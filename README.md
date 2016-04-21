@@ -24,9 +24,9 @@ Otherwise, the blog will be parsed and will look at all the 'adf.ly' links to ge
 # Example
 
 ```powershell
-$MegaDL = (Resolve-Path "..\megatools-1.9.97-win64\megadl.exe")
-$DownloadTo = (Resolve-Path "..\Fatmagul")
-\fatmagul.ps1 -MegaDL $MegaDL -DownloadTo $DownloadTo -Verbose
+$MegaDL = "..\megatools-1.9.97-win64\megadl.exe"
+$DownloadTo = "..\Fatmagul"
+.\fatmagul.ps1 -MegaDL $MegaDL -DownloadTo $DownloadTo -Verbose
 ```
 
 # Notes
