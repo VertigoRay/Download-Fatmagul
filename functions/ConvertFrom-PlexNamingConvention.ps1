@@ -1,4 +1,4 @@
-function ConvertTo-PlexNamingConvention () {
+function ConvertFrom-PlexNamingConvention () {
     [CmdletBinding()]
     param(
         [Parameter(
