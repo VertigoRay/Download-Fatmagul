@@ -5,15 +5,16 @@ Download Fatmagul (Spanish) from Mega. I didn't share them. I just found them he
 I've saved all the mega_urls in case the site changes. I can just switch to that. 
 I browse the site, to travers all his 'adf.ly' links though so the sharer might get the ad-credit he desires.
 
-# Parameter MegaDL
+# Parameters
+ ## MegaDL
 
 The path to the `megadl.exe`. Must be a [PathInfo] Object; see examples.
 
-# Parameter DownloadTo
+## DownloadTo
 
 The path to download to. Must be a [PathInfo] Object; see examples.
 
-# Parameter UsePreSavedMegaUrls
+## UsePreSavedMegaUrls
 
 If this switch is set, the previously acquired Mega URLS will be used.
 
