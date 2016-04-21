@@ -104,6 +104,10 @@ foreach ($url in $mega_urls.GetEnumerator()) {
     }
 }
 
-# Final Naming Convention fix. This changed
-# Get-ChildItem $DownloadTo -File | ConvertFrom-PlexNamingConvention
+# Wait for the rest of the downloads to finish.
+while ((Get-Job -State 'Running' | Measure-Object).Count -gt 0) {
+    Start-Sleep -Seconds 10
+}
+
+# Final Naming Convention fix to catch the stragglers
 Get-ChildItem $DownloadTo -File | Select-Object -ExpandProperty FullName | ConvertTo-PlexNamingConvention
