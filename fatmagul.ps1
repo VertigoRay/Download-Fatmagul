@@ -46,21 +46,17 @@ param(
 )
 
 # To help the OP since you want his wares, click a few of the Adf.ly links
-Start-Process 'http://fatmagulnovelaturca.blogspot.com'
+# Start-Process 'http://fatmagulnovelaturca.blogspot.com'
 
 # Import all of our functions
-foreach ($file in (Get-ChildItem '.\functions' -File -ErrorAction Stop)) {
-    . $file
+foreach ($file in (Get-ChildItem "${PSScriptRoot}\functions" -File -ErrorAction Stop)) {
+    . $file.FullName
 }
 
 $mega_urls = Get-FatmagulMegaUrls
 
 # Rename everything back to original so we don't re-download.
-foreach ($item in (Get-ChildItem $DownloadTo)) { 
-    $item.Name -match '\s(\d+)\.(.+)' | Out-Null
-    Rename-Item $item.FullName ($item.Name.Replace('.e', ' ')) -ErrorAction Ignore
-}
-
+Get-ChildItem $DownloadTo | ConvertFrom-PlexNamingConvention
 
 # Download everything, and fix names.
 $jobs = @{}
@@ -70,9 +66,7 @@ foreach ($url in $mega_urls) {
         Start-Sleep -Seconds 10
     }
 
-    $job = Start-Job -ArgumentList @($MegaDL, $DownloadTo, $url) -ScriptBlock {
-        & $args[0] $args[2] --path $args[1]
-    }
+    $job = Invoke-MegaDlAsJob -MegaDL $MegaDL -DownloadTo $DownloadTo -Url $Url
 
     Write-Verbose "Downloading: $($job.Id): ${url}"
     $jobs.Add($url, $job.Id) | Out-Null
@@ -81,11 +75,11 @@ foreach ($url in $mega_urls) {
     foreach ($j in $jobs.GetEnumerator()) {
         if ((Get-Job -Id $j.Value).State -eq 'Completed') {
             try {
-                (Receive-Job -Id $j.Value -ErrorAction Stop) -match 'Fatmagul\s(\d+)\.([^:]+)' | Out-Null
+                (Receive-Job -Id $j.Value -ErrorAction Stop) -imatch 'Fatmagul\s(\d+)\.([^:]+)' | Out-Null
             } catch {
-                $Error[0].Exception.Message -match 'Fatmagul\s(\d+)\.([^\s]+)' | Out-Null
+                $Error[0].Exception.Message -imatch 'Fatmagul\s(\d+)\.([^\s]+)' | Out-Null
             } finally {
-                Rename-Item "${path}\$($Matches[0])" ("Fatmagul.e{0:d3}.{1}" -f ([int]$Matches[1], $Matches[2])) -ErrorAction Ignore
+                ConvertTo-PlexNamingConvention -FileName (Resolve-Path "${DownloadTo}\$($Matches[0])" -ErrorAction)
             }
 
             # Can't remove Keys from the object we're looping through.
