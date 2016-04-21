@@ -6,7 +6,8 @@ I've saved all the mega_urls in case the site changes. I can just switch to that
 I browse the site, to travers all his 'adf.ly' links though so the sharer might get the ad-credit he desires.
 
 # Parameters
- ## MegaDL
+
+## MegaDL
 
 The path to the `megadl.exe`. Must be a [PathInfo] Object; see examples.
 
