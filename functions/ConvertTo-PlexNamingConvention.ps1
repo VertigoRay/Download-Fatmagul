@@ -16,11 +16,18 @@ function ConvertTo-PlexNamingConvention () {
             $title = $Leaf.Split('.')[0..($Leaf.Split('.').Count-2)] -Join ' '
 
             [System.Collections.ArrayList]$title_pieces = @()
+
             foreach ($t in $title.Split(' .')) {
+                $episode = $null
+
                 try {
                     [int]$episode = $t
                 } catch [System.Management.Automation.RuntimeException] {
-                    $title_piece = (Get-Culture).TextInfo.ToTitleCase($t)
+                    if ($t -match 'e\d{1,3}') {
+                        [int]$episode = $t.Substring(1)
+                    } else {
+                        $title_piece = (Get-Culture).TextInfo.ToTitleCase($t)
+                    }
                 }
 
                 if ($episode) {
@@ -30,9 +37,10 @@ function ConvertTo-PlexNamingConvention () {
                 }
             }
 
+
             $rename_to = '{0}.{1}' -f @(($title_pieces -join '.'), $ext)
             Write-Verbose "$($Leaf) > ${rename_to}"
-            Rename-Item $File $rename_to -ErrorAction Ignore
+            Rename-Item $File $rename_to
         }
     }
 

@@ -21,6 +21,10 @@ If this switch is set, the previously acquired Mega URLS will be used.
 
 Otherwise, the blog will be parsed and will look at all the 'adf.ly' links to get the Mega URLs. This might help the OP get ad credit ... /shrug
 
+## NumberOfDownloadJobs
+
+The number of concurrent download jobs.
+
 # Example
 
 ```powershell

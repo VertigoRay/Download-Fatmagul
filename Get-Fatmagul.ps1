@@ -16,6 +16,8 @@ The path to download to. Must be a [PathInfo] Object; see examples.
 If this switch is set, the previously acquired Mega URLS will be used.
 
 Otherwise, the blog will be parsed and will look at all the 'adf.ly' links to get the Mega URLs. This might help the OP get ad credit ... /shrug
+.PARAMETER NumberOfDownloadJobs
+The number of concurrent download jobs.
 .EXAMPLE
 $MegaDL = (Resolve-Path "..\megatools-1.9.97-win64\megadl.exe")
 $DownloadTo = (Resolve-Path "..\Fatmagul")
@@ -43,10 +45,13 @@ param(
     ,
     [switch]
     $UsePreSavedMegaUrls
+    ,
+    [int]
+    $NumberOfDownloadJobs = 5
 )
 
 # To help the OP since you want his wares, click a few of the Adf.ly links
-# Start-Process 'http://fatmagulnovelaturca.blogspot.com'
+Start-Process 'http://fatmagulnovelaturca.blogspot.com'
 
 # Import all of our functions
 foreach ($file in (Get-ChildItem "${PSScriptRoot}\functions" -File -ErrorAction Stop)) {
@@ -61,7 +66,7 @@ Get-ChildItem $DownloadTo -File | ConvertFrom-PlexNamingConvention
 $jobs = @{}
 $mega_urls = Get-FatmagulMegaUrls
 foreach ($url in $mega_urls.GetEnumerator()) {
-    while ((Get-Job -State 'Running' | Measure-Object).Count -gt 5) {
+    while ((Get-Job -State 'Running' | Measure-Object).Count -eq $NumberOfDownloadJobs) {
         Start-Sleep -Seconds 10
     }
 
@@ -77,8 +82,14 @@ foreach ($url in $mega_urls.GetEnumerator()) {
                 (Receive-Job -Id $j.Value -ErrorAction Stop) -imatch 'Fatmagul\s(\d+)\.([^:]+)' | Out-Null
             } catch {
                 $Error[0].Exception.Message -imatch 'Fatmagul\s(\d+)\.([^\s]+)' | Out-Null
-            } finally {
+            }
+
+            try {
                 ConvertTo-PlexNamingConvention -FileName (Resolve-Path "${DownloadTo}\$($Matches[0])" -ErrorAction Stop)
+            } catch [System.Management.Automation.ItemNotFoundException] {
+                Write-Warning $Error[0].Exception.Message
+                # Maybe we'll get it next time ... :D
+                continue
             }
 
             # Can't remove Keys from the object we're looping through.
@@ -92,3 +103,7 @@ foreach ($url in $mega_urls.GetEnumerator()) {
         $jobs.Remove($j) | Out-Null
     }
 }
+
+# Final Naming Convention fix. This changed
+# Get-ChildItem $DownloadTo -File | ConvertFrom-PlexNamingConvention
+Get-ChildItem $DownloadTo -File | Select-Object -ExpandProperty FullName | ConvertTo-PlexNamingConvention
